@@ -1,8 +1,12 @@
 from itertools import chain
+
+from rest_framework import filters, generics, views, viewsets
 from rest_framework.response import Response
-from rest_framework import views, viewsets, filters, generics
-from .models import Farmer, Product, Certificate
-from .serializers import FarmerSerializer, ProductSerializer, CertificateSerializer
+
+from .models import Certificate, Farmer, Product
+from .serializers import (CertificateSerializer, FarmerSerializer,
+                          ProductSerializer)
+
 
 class FarmerView(viewsets.ModelViewSet):
     """

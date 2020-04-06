@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Farmer(models.Model):
     nom = models.CharField(max_length=50)
     numero_siret = models.IntegerField() # 14 chiffres (9 siren + 5 NIC)

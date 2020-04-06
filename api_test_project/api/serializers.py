@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import Farmer, Product, Certificate
 
-                
+from .models import Certificate, Farmer, Product
+
+
 class FarmerSerializer(serializers.ModelSerializer): 
     class Meta:
         model = Farmer
@@ -45,5 +46,3 @@ class CertificateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Certificate
         fields = ('id', 'url', 'nom', 'type', 'farmer_certifie')
-        
-     

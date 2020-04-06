@@ -1,8 +1,10 @@
-from django.urls import path, include
 from django.conf.urls import url
-from . import views
+from django.urls import include, path
 from rest_framework import routers, viewsets
 from rest_framework.urlpatterns import format_suffix_patterns
+
+from . import views
+
 
 class DefaultRouterWithSimpleViews(routers.DefaultRouter):
     """
@@ -61,5 +63,5 @@ router.register('certificate', views.CertificateView)
 router.register('search-prod-certif', views.ProdAndCertifView, basename='search-prod-certif')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', include(router.urls)),  
 ]
