@@ -285,7 +285,7 @@ class TestCertificateApi(APITestCase):
         )
 
         self.certificat_1 = Certificate.objects.create(
-            nom = 'certificat1',
+            nom = 'certificate1',
             type = 'biologique',
             farmer_certifie = self.farmer_1
         )
@@ -365,51 +365,155 @@ class TestCertificateApi(APITestCase):
         self.assertEqual(response['content-type'], 'application/json')
         self.assertRaises(AssertionError)
         
-
     def test_modify_certificate_with_correct_payload(self):
-            """
-            test PUT: Modify a instance of Certificate.
-            """
-            url = '/certificate/1/'
-            payload = {
-                'nom': 'certificate1_modified', # modified
-                'type': 'sans ogm', # modified
-                'farmer_certifie': 1
-            }
-            response = self.client.put(url, payload)
-            name = Certificate.objects.first().nom
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response['content-type'], 'application/json')
-            self.assertEqual(response.data['nom'], name)
+        """
+        test PUT: Modify a instance of Certificate.
+        """
+        url = '/certificate/1/'
+        payload = {
+            'nom': 'certificate1_modified', # modified
+            'type': 'sans ogm', # modified
+            'farmer_certifie': 1
+        }
+        response = self.client.put(url, payload)
+        name = Certificate.objects.first().nom
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['content-type'], 'application/json')
+        self.assertEqual(response.data['nom'], name)
 
     def test_modify_product_with_incorrect_data(self):
-            """
-            test PUT: Modify a instance of Certificate with bad data.
-            """
-            url = '/certificate/1/'
-            payload = {
-                'nom': 'certificate1_modified', # modified
-                'type': 'bad-type', # modified
-                'farmer_certifie': 1
-            }
-            response = self.client.put(url, payload)
-            name = Certificate.objects.first().nom
-            self.assertEqual(response.status_code, 400)
-            self.assertRaises(AssertionError)
+        """
+        test PUT: Modify a instance of Certificate with bad data.
+        """
+        url = '/certificate/1/'
+        payload = {
+            'nom': 'certificate1_modified', # modified
+            'type': 'bad-type', # modified
+            'farmer_certifie': 1
+        }
+        response = self.client.put(url, payload)
+        name = Certificate.objects.first().nom
+        self.assertEqual(response.status_code, 400)
+        self.assertRaises(AssertionError)
     
     def test_delete_certificate(self):
-            """
-            test DELETE: delete a instance of Certificate.
-            """
-            url = '/certificate/1/'
-            response = self.client.delete(url)
-            self.assertEqual(response.status_code, 204)
+        """
+        test DELETE: delete a instance of Certificate.
+        """
+        url = '/certificate/1/'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 204)
 
     def test_delete_farmer_delete_certificate_on_cascade(self):
-            """
-            test DELETE certificate associated to a farmer deletion.
-            with our example in setUp: delete farmer_1 must delete on cascade certificate 1. 
-            """
-            self.client.delete('/farmer/1/')
-            response = self.client.get('/certificate/1/')
-            self.assertEqual(response.status_code, 404)
+        """
+        test DELETE certificate associated to a farmer deletion.
+        with our example in setUp: delete farmer_1 must delete on cascade certificate 1. 
+        """
+        self.client.delete('/farmer/1/')
+        response = self.client.get('/certificate/1/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_search_certificate_from_farmer_name(self):
+        """
+        test GET '/certificate/?search=farmer_name' return list of certificate linked to the farmer_name.
+        """
+        url = '/certificate/'
+        payload = {
+            'search': 'farmer1'
+        }
+        response = self.client.get(url, payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data[0]['nom'], 'certificate1')
+
+    def test_search_certificate_from_farmer_name_and_filter_fields_returned(self):
+        """
+        test GET '/certificate/?search=farmer_name' return list of certificate linked to the farmer_name.
+        """
+        url = '/certificate/'
+        payload = {
+            'search': 'farmer1',
+            'fields': 'type'
+        }
+        response = self.client.get(url, payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data[0]['type'], 'biologique')
+        with self.assertRaises(KeyError):
+            response.data[0]['nom']
+
+class TestSearchProdCertifApi(APITestCase):
+    """
+    Test the api endpoints '/search-prod-certif/' 
+    """
+    def setUp(self):
+        """
+        Resume of the setup of the database:
+
+        farmer 1: certif 1 & product 1
+        farmer 2: certif 2 & products (1, 2)
+        """
+        self.client = APIClient()
+        # Create instance of Farmer
+        self.farmer_1 = Farmer.objects.create(
+            nom = 'farmer1',
+            numero_siret = 124119812876, # 14 chiffres (9 siren + 5 NIC)
+            adresse = 'add1'
+        )
+        self.farmer_2 = Farmer.objects.create(
+            nom = 'farmer2',
+            numero_siret = 1234567654, # 14 chiffres (9 siren + 5 NIC)
+            adresse = 'add2'
+        )
+        # certificate 1 to farmer 1
+        self.certificat_1 = Certificate.objects.create(
+            nom = 'certificate1',
+            type = 'biologique',
+            farmer_certifie = self.farmer_1
+        )
+        # certificate 2 to farmer 2
+        self.certificat_2 = Certificate.objects.create(
+            nom = 'certificat2',
+            type = 'sans ogm',
+            farmer_certifie = self.farmer_2
+        )
+        # Product_1 with farmer 1 & 2
+        self.product_1 = Product.objects.create(
+            nom = 'product1',
+            unite = 4,
+            codification_internationnale = 'CI-423',
+        )
+        self.product_1.producteurs.add(self.farmer_1, self.farmer_2)
+        # Product_2 with farmer 2
+        self.product_2 = Product.objects.create(
+            nom = 'product2',
+            unite = 34,
+            codification_internationnale = 'CI-4223413213',
+        )
+        self.product_2.producteurs.add(self.farmer_2)
+
+    def test_search_certificate_and_product_from_farmer_name(self):
+        """
+        test GET /search-prod-certif/' with filter against the query parameter 'name of the farmer'.
+        """
+        url = '/search-prod-certif/'
+        payload_1 = {
+            'search': 'farmer1',
+        }
+        payload_2 = {
+            'search': 'farmer2',
+        }
+        response = self.client.get(url, payload_1)
+        self.assertEqual(response.status_code, 200)
+
+        # assert farmer 1 have certif 1 and product 1
+        self.assertEqual(response.data,[
+            {'item_type': 'product', 'data': {'id': 1, 'url': 'http://testserver/product/1/', 'nom': 'product1', 'unite': '4', 'codification_internationnale': 'CI-423', 'producteurs': [1, 2]}},
+            {'item_type': 'certificate', 'data': {'id': 1, 'url': 'http://testserver/certificate/1/', 'nom': 'certificate1', 'type': 'biologique', 'farmer_certifie': 1}}
+        ])
+        response = self.client.get(url, payload_2)
+
+        # assert farmer 2 have certif 2 and product 1 & 2
+        self.assertEqual(response.data,[
+            {'item_type': 'product', 'data': {'id': 1, 'url': 'http://testserver/product/1/', 'nom': 'product1', 'unite': '4', 'codification_internationnale': 'CI-423', 'producteurs': [1, 2]}},
+            {'item_type': 'product', 'data': {'id': 2, 'url': 'http://testserver/product/2/', 'nom': 'product2', 'unite': '34', 'codification_internationnale': 'CI-4223413213', 'producteurs': [2]}},
+            {'item_type': 'certificate', 'data': {'id': 2, 'url': 'http://testserver/certificate/2/', 'nom': 'certificat2', 'type': 'sans ogm', 'farmer_certifie': 2}}
+        ])

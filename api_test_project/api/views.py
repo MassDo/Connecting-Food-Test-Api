@@ -63,6 +63,5 @@ class ProdAndCertifView(views.APIView):
                 serializer = CertificateSerializer(entry, context={'request': request})
             
             results.append({'item_type': item_type, 'data': serializer.data})
-        print(results)
 
         return Response(results)

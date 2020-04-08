@@ -1,0 +1,65 @@
+[33mcommit db0d7bfe519306e235338143937f41ded88dc4df[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: MassDo <dorian_massoulier@hotmail.com>
+Date:   Wed Apr 8 15:29:59 2020 +0200
+
+    Tests for product and certificate API endpoints.
+    
+    Test for the CRUD operation for 'product' and 'certificate' api endpoint.
+    for certificate add test of the 'on_cascade' deletion after delete a farmer.
+
+[33mcommit ecaef125d25eb33498b1d2073087650240714679[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: MassDo <dorian_massoulier@hotmail.com>
+Date:   Wed Apr 8 12:30:29 2020 +0200
+
+    Tests for Farmer endpoint
+    
+    Tests for CRUD operation on the Farmer model, in case of correct and incorrect data.
+
+[33mcommit 1fb8c6f3ddb8fbf5a45797196b683ea3bb81779e[m
+Merge: 7a5093d 81ed607
+Author: MassDo <dorian_massoulier@hotmail.com>
+Date:   Mon Apr 6 20:38:47 2020 +0200
+
+    Merge branch 'master' of https://github.com/MassDo/Connecting-Food-Test-Api
+
+[33mcommit 7a5093ddf6dcdb36e2119c01c84bca4650a694bf[m
+Author: MassDo <dorian_massoulier@hotmail.com>
+Date:   Mon Apr 6 20:37:46 2020 +0200
+
+    sorting imports
+
+[33mcommit 81ed607b47eb39942428a30fad9794ecfc7e7d0e[m
+Author: MassDo <46751454+MassDo@users.noreply.github.com>
+Date:   Mon Apr 6 13:21:11 2020 +0200
+
+    Create README.md
+
+[33mcommit b9ff070c7c7941113d3941f9104dfa4af175a2c0[m
+Author: MassDo <dorian_massoulier@hotmail.com>
+Date:   Mon Apr 6 12:50:21 2020 +0200
+
+    add the api application urls with custom router
+
+[33mcommit 3df76713cb31adf011e189bcb70d89284cfa8c62[m
+Author: MassDo <dorian_massoulier@hotmail.com>
+Date:   Mon Apr 6 12:37:54 2020 +0200
+
+    adding views: ModelVieSet class for views related directly to our models and APIView for the one that aggregate data
+
+[33mcommit 228e36f3588e149ec91c09466343632718ece01d[m
+Author: MassDo <dorian_massoulier@hotmail.com>
+Date:   Mon Apr 6 12:32:02 2020 +0200
+
+    adding the serializers for the Farmer Product and Certicicate models
+
+[33mcommit bc736efc78c5021c12276f35dd95d02e3ae292df[m
+Author: MassDo <dorian_massoulier@hotmail.com>
+Date:   Mon Apr 6 12:20:53 2020 +0200
+
+    projet and app created, project settings, and creation of the models
+
+[33mcommit a4df262e776339ad3d7498338ca618cf42ffbaf1[m
+Author: MassDo <dorian_massoulier@hotmail.com>
+Date:   Mon Apr 6 12:06:52 2020 +0200
+
+    first commit adding .gitignore, python 3.7.7, django 2.2.4 and django-rest-framework
