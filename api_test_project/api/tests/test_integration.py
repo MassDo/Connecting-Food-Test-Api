@@ -130,3 +130,286 @@ class TestFarmerApi(APITestCase):
             url = '/farmer/1/'
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 204)
+
+class TestProductApi(APITestCase):
+    """
+    Test the api endpoints '/product/' and '/product/<pk>/'.
+    """
+
+    def setUp(self):
+        self.client = APIClient()
+        # Create instance of Farmer
+        self.farmer_1 = Farmer.objects.create(
+            nom = 'farmer1',
+            numero_siret = 124119812876, # 14 chiffres (9 siren + 5 NIC)
+            adresse = 'add1'
+        )
+        self.farmer_2 = Farmer.objects.create(
+            nom = 'farmer2',
+            numero_siret = 1234567654, # 14 chiffres (9 siren + 5 NIC)
+            adresse = 'add2'
+        )
+
+        # Product_1 with farmer 1 & 2
+        self.product_1 = Product.objects.create(
+            nom = 'product1',
+            unite = 4,
+            codification_internationnale = 'CI-423',
+        )
+        self.product_1.producteurs.add(self.farmer_1, self.farmer_2)
+
+        # Product_2 with farmer 2
+        self.product_2 = Product.objects.create(
+            nom = 'product2',
+            unite = 34,
+            codification_internationnale = 'CI-4223413213',
+        )
+        self.product_2.producteurs.add(self.farmer_2)
+        
+    def test_get_product_list(self):
+        """
+        test Get /product/ endpoint return all the instances of Product model.
+        """
+        PRODUCT_URL = reverse('product-list')
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, context=serializer_context, many=True)
+        response = self.client.get(PRODUCT_URL)
+        self.assertEqual(response.status_code, 200) # ou status.HTTP_200_OK ?
+        self.assertEqual(response['content-type'], 'application/json')
+        self.assertEqual(response.data, serializer.data)
+
+    def test_get_product_detail(self):
+        """
+        test Get /product/1/ return the instace with pk=1 of Product model.
+        """
+        url = '/product/1/'
+        product = Product.objects.get(pk=1)
+        serializer = ProductSerializer(product, context=serializer_context)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['content-type'], 'application/json')
+        self.assertEqual(response.data, serializer.data)
+
+    def test_create_new_product_with_correct_payload(self):
+        """
+        test POST: Create a new instance of Product
+        """
+        url = '/product/'
+        payload = {
+            'nom' : 'product3',
+            'unite' : 23,
+            'codification_internationnale' : 'ci',
+            'producteurs': [1]
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response['content-type'], 'application/json')
+        self.assertEqual(response.data['nom'], 'product3')
+        self.assertEqual(response.data['producteurs'], [1])
+    
+    def test_create_new_product_with_incorrect_payload(self):
+        """
+        test POST: Create a new instance of Product with incorrect data.
+        """
+        url = '/product/'
+        payload = {
+            'nom' : 'product3',
+            'unite' : 23,
+            'codification_internationnale' : 'ci',
+            'producteurs': [5] # invalid FK
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response['content-type'], 'application/json')
+        self.assertRaises(AssertionError)
+
+    def test_modify_product_with_correct_payload(self):
+            """
+            test PUT: Modify a instance of Product.
+            """
+            url = '/product/1/'
+            payload = {
+                'nom' : 'product1_modified', # modif
+                'unite' : 23,
+                'codification_internationnale' : 'ci',
+                'producteurs': [1,2] # modif
+            }
+            response = self.client.put(url, payload)
+            name = Product.objects.first().nom
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['content-type'], 'application/json')
+            self.assertEqual(response.data['nom'], name)
+
+    def test_modify_product_with_incorrect_data(self):
+            """
+            test PUT: Modify a instance of Product with bad data.
+            """
+            url = '/product/1/'
+            payload = {
+                'nom' : 'product1',
+                'unite' : 23,
+                'codification_internationnale' : 'ci',
+                'producteurs': [8] # invalid
+            }
+            response = self.client.put(url, payload)
+            name = Product.objects.first().nom
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response['content-type'], 'application/json')
+            self.assertRaises(AssertionError)
+    
+    def test_delete_product(self):
+            """
+            test DELETE: delete a instance of Product.
+            """
+            url = '/product/1/'
+            response = self.client.delete(url)
+            self.assertEqual(response.status_code, 204)
+
+class TestCertificateApi(APITestCase):
+    """
+    Test the api endpoints '/certificate/' and '/certificate/<pk>/'.
+    """
+
+    def setUp(self):
+        self.client = APIClient()
+        # Create instance of Farmer
+        self.farmer_1 = Farmer.objects.create(
+            nom = 'farmer1',
+            numero_siret = 124119812876, # 14 chiffres (9 siren + 5 NIC)
+            adresse = 'add1'
+        )
+        self.farmer_2 = Farmer.objects.create(
+            nom = 'farmer2',
+            numero_siret = 1234567654, # 14 chiffres (9 siren + 5 NIC)
+            adresse = 'add2'
+        )
+
+        self.certificat_1 = Certificate.objects.create(
+            nom = 'certificat1',
+            type = 'biologique',
+            farmer_certifie = self.farmer_1
+        )
+        self.certificat_2 = Certificate.objects.create(
+            nom = 'certificat2',
+            type = 'sans ogm',
+            farmer_certifie = self.farmer_2
+        )
+        
+    def test_get_certificate_list(self):
+        """
+        test Get /certificate/ endpoint return all the instances of Certificate model.
+        """
+        PRODUCT_URL = reverse('certificate-list')
+        certificates = Certificate.objects.all()
+        serializer = CertificateSerializer(certificates, context=serializer_context, many=True)
+        response = self.client.get(PRODUCT_URL)
+        self.assertEqual(response.status_code, 200) # ou status.HTTP_200_OK ?
+        self.assertEqual(response['content-type'], 'application/json')
+        self.assertEqual(response.data, serializer.data)
+
+    def test_get_certificate_detail(self):
+        """
+        test Get /certificate/1/ return the instace with pk=1 of Certificate model.
+        """
+        url = '/certificate/1/'
+        certificate = Certificate.objects.get(pk=1)
+        serializer = CertificateSerializer(certificate, context=serializer_context)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['content-type'], 'application/json')
+        self.assertEqual(response.data, serializer.data)
+
+    def test_create_new_certificate_with_correct_payload(self):
+        """
+        test POST: Create a new instance of Certificate
+        """
+        url = '/certificate/'
+        payload = {
+            'nom': 'certificate3',
+            'type': 'biologique',
+            'farmer_certifie': 1
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response['content-type'], 'application/json')
+        self.assertEqual(response.data['nom'], 'certificate3')
+        self.assertEqual(response.data['farmer_certifie'], 1)
+    
+    def test_create_new_certificate_with_incorrect_type_choice(self):
+        """
+        test POST: Create a new instance of Certificate with incorrect data.
+        """
+        url = '/certificate/'
+        payload = {
+            'nom': 'certificate3',
+            'type': 'bad-type', # invalid
+            'farmer_certifie': 1
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response['content-type'], 'application/json')
+        self.assertRaises(AssertionError)
+
+    def test_create_new_certificate_with_incorrect_FK(self):
+        """
+        test POST: Create a new instance of Certificate with incorrect data.
+        """
+        url = '/certificate/'
+        payload = {
+            'nom': 'certificate3',
+            'type': 'biologique', # invalid
+            'farmer_certifie': [1,2]
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response['content-type'], 'application/json')
+        self.assertRaises(AssertionError)
+        
+
+    def test_modify_certificate_with_correct_payload(self):
+            """
+            test PUT: Modify a instance of Certificate.
+            """
+            url = '/certificate/1/'
+            payload = {
+                'nom': 'certificate1_modified', # modified
+                'type': 'sans ogm', # modified
+                'farmer_certifie': 1
+            }
+            response = self.client.put(url, payload)
+            name = Certificate.objects.first().nom
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['content-type'], 'application/json')
+            self.assertEqual(response.data['nom'], name)
+
+    def test_modify_product_with_incorrect_data(self):
+            """
+            test PUT: Modify a instance of Certificate with bad data.
+            """
+            url = '/certificate/1/'
+            payload = {
+                'nom': 'certificate1_modified', # modified
+                'type': 'bad-type', # modified
+                'farmer_certifie': 1
+            }
+            response = self.client.put(url, payload)
+            name = Certificate.objects.first().nom
+            self.assertEqual(response.status_code, 400)
+            self.assertRaises(AssertionError)
+    
+    def test_delete_certificate(self):
+            """
+            test DELETE: delete a instance of Certificate.
+            """
+            url = '/certificate/1/'
+            response = self.client.delete(url)
+            self.assertEqual(response.status_code, 204)
+
+    def test_delete_farmer_delete_certificate_on_cascade(self):
+            """
+            test DELETE certificate associated to a farmer deletion.
+            with our example in setUp: delete farmer_1 must delete on cascade certificate 1. 
+            """
+            self.client.delete('/farmer/1/')
+            response = self.client.get('/certificate/1/')
+            self.assertEqual(response.status_code, 404)
